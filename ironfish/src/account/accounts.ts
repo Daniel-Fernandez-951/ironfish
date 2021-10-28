@@ -18,7 +18,6 @@ import { PromiseResolve, PromiseUtils, SetTimeoutToken } from '../utils'
 import { WorkerPool } from '../workerPool'
 import { Account, AccountDefaults, AccountsDB } from './accountsdb'
 import { validateAccount } from './validator'
-const REBROADCAST_SEQUENCE_DELTA = 5
 
 type SyncTransactionParams =
   // Used when receiving a transaction from a block with notes
@@ -56,6 +55,7 @@ export class Accounts {
   readonly workerPool: WorkerPool
   readonly chain: Blockchain
 
+  protected rebroadcastAfter: number
   protected defaultAccount: string | null = null
   protected headHash: string | null = null
   protected isStarted = false
@@ -66,16 +66,19 @@ export class Accounts {
     workerPool,
     database,
     logger = createRootLogger(),
+    rebroadcastAfter,
   }: {
     chain: Blockchain
     workerPool: WorkerPool
     database: AccountsDB
     logger?: Logger
+    rebroadcastAfter?: number
   }) {
     this.chain = chain
     this.logger = logger.withTag('accounts')
     this.db = database
     this.workerPool = workerPool
+    this.rebroadcastAfter = rebroadcastAfter ?? 5
   }
 
   async updateHead(): Promise<void> {
@@ -719,12 +722,15 @@ export class Accounts {
       return
     }
 
-    const heaviestHead = this.chain.head
-    if (heaviestHead === null) {
+    if (this.headHash === null) {
       return
     }
 
-    const headSequence = heaviestHead.sequence
+    const head = await this.chain.getHeader(Buffer.from(this.headHash, 'hex'))
+
+    if (head === null) {
+      return
+    }
 
     for (const [transactionHash, tx] of this.transactionMap) {
       const { transaction, blockHash, submittedSequence } = tx
@@ -744,13 +750,13 @@ export class Accounts {
       // TODO: This algorithm suffers a deanonim attack where you can watch to see what transactions node continously
       // send out, then you can know those transactions are theres. This should be randomized and made less,
       // predictable later to help prevent that attack.
-      if (headSequence - submittedSequence < REBROADCAST_SEQUENCE_DELTA) {
+      if (head.sequence - submittedSequence < this.rebroadcastAfter) {
         continue
       }
 
       await this.updateTransactionMap(transactionHash, {
         ...tx,
-        submittedSequence: headSequence,
+        submittedSequence: head.sequence,
       })
 
       this.broadcastTransaction(transaction)

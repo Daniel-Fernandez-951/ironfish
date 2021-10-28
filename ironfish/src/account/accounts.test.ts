@@ -58,15 +58,18 @@ describe('Accounts', () => {
     const accountA = await useAccountFixture(nodeA.accounts, 'a')
     const accountB = await useAccountFixture(nodeA.accounts, 'b')
 
+    const broadcastSpy = jest.spyOn(nodeA.accounts, 'broadcastTransaction')
+
     const blockA1 = await useMinerBlockFixture(nodeA.chain, undefined, accountA, nodeA.accounts)
     await expect(nodeA.chain).toAddBlock(blockA1)
 
-    const blockB1 = await useMinerBlockFixture(nodeB.chain)
+    const blockB1 = await useMinerBlockFixture(nodeB.chain, undefined, accountB)
     await expect(nodeB.chain).toAddBlock(blockB1)
-    const blockB2 = await useMinerBlockFixture(nodeB.chain)
+    const blockB2 = await useMinerBlockFixture(nodeB.chain, undefined, accountB)
     await expect(nodeB.chain).toAddBlock(blockB2)
-    await nodeA.accounts.updateHead()
 
+    // Check nodeA balance
+    await nodeA.accounts.updateHead()
     expect(nodeA.accounts.getBalance(accountA)).toMatchObject({
       confirmedBalance: BigInt(500000000),
       unconfirmedBalance: BigInt(500000000),
@@ -75,6 +78,9 @@ describe('Accounts', () => {
     // This transaction will be invalid after the reorg
     const invalidTx = await useTxFixture(nodeA.accounts, accountA, accountB)
 
+    expect(broadcastSpy).toHaveBeenCalledTimes(0)
+
+    await nodeA.accounts.updateHead()
     expect(nodeA.accounts.getBalance(accountA)).toMatchObject({
       confirmedBalance: BigInt(0),
       unconfirmedBalance: BigInt(499999999),
@@ -83,7 +89,6 @@ describe('Accounts', () => {
     await expect(nodeA.chain).toAddBlock(blockB1)
     await expect(nodeA.chain).toAddBlock(blockB2)
     expect(nodeA.chain.head.hash.equals(blockB2.header.hash)).toBe(true)
-    await nodeA.accounts.updateHead()
 
     // We now have this tree with nodeA's wallet trying to spend a note in
     // invalidTx that has been removed once A1 was disconnected from the
@@ -92,16 +97,23 @@ describe('Accounts', () => {
     // G -> A1
     //   -> B2 -> B3
 
+    // This should be be 500000000 for both once A1 is removed
+    await nodeA.accounts.updateHead()
+    expect(nodeA.accounts.getBalance(accountA)).toMatchObject({
+      confirmedBalance: BigInt(0),
+      unconfirmedBalance: BigInt(999999999),
+    })
+
+    // The transaction should now be considered invalid
     await expect(
       nodeA.memPool['isValidTransaction'](invalidTx, await nodeA.chain.notes.size(), []),
     ).resolves.toBe(false)
 
-    // This should be be 500000000 for both once A1 is removed
-    expect(nodeA.accounts.getBalance(accountA)).toMatchObject({
-      confirmedBalance: BigInt(0),
-      unconfirmedBalance: BigInt(499999999),
-    })
-
-    // TODO: check rebroadcasting and accounts
-  }, 60000)
+    // Check that the TX is rebroadcast incorrectly
+    nodeA.accounts['rebroadcastAfter'] = 1
+    nodeA.accounts['isStarted'] = true
+    nodeA.chain['synced'] = true
+    await nodeA.accounts.rebroadcastTransactions()
+    expect(broadcastSpy).toHaveBeenCalledTimes(2)
+  }, 120000)
 })
