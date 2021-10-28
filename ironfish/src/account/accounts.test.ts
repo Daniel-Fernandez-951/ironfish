@@ -51,7 +51,7 @@ describe('Accounts', () => {
     expect(getTransactionsSpy).toBeCalledTimes(8)
   }, 8000)
 
-  it('should reproduce issue', async () => {
+  it.only('should reproduce issue', async () => {
     const { node: nodeA } = await nodeTest.createSetup()
     const { node: nodeB } = await nodeTest.createSetup()
 
@@ -97,6 +97,9 @@ describe('Accounts', () => {
     // G -> A1
     //   -> B2 -> B3
 
+    // The transaction should now be considered invalid
+    await expect(nodeA.chain.verifier.verifyTransactionAdd(invalidTx)).resolves.toBe(false)
+
     // This should be be 500000000 for both once A1 is removed
     await nodeA.accounts.updateHead()
     expect(nodeA.accounts.getBalance(accountA)).toMatchObject({
@@ -104,16 +107,11 @@ describe('Accounts', () => {
       unconfirmedBalance: BigInt(999999999),
     })
 
-    // The transaction should now be considered invalid
-    await expect(
-      nodeA.memPool['isValidTransaction'](invalidTx, await nodeA.chain.notes.size(), []),
-    ).resolves.toBe(false)
-
     // Check that the TX is rebroadcast incorrectly
     nodeA.accounts['rebroadcastAfter'] = 1
     nodeA.accounts['isStarted'] = true
     nodeA.chain['synced'] = true
     await nodeA.accounts.rebroadcastTransactions()
-    expect(broadcastSpy).toHaveBeenCalledTimes(2)
+    expect(broadcastSpy).toHaveBeenCalledTimes(0)
   }, 120000)
 })

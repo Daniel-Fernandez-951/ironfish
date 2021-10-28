@@ -241,7 +241,6 @@ export class Accounts {
     }
 
     await this.updateHead()
-
     await this.rebroadcastTransactions()
 
     if (this.isStarted) {
@@ -751,6 +750,18 @@ export class Accounts {
       // send out, then you can know those transactions are theres. This should be randomized and made less,
       // predictable later to help prevent that attack.
       if (head.sequence - submittedSequence < this.rebroadcastAfter) {
+        continue
+      }
+
+      const verify = await this.chain.verifier.verifyTransactionAdd(transaction)
+
+      if (!verify.valid) {
+        this.logger.info(
+          `Pruning transaction during rebroadcast ${transactionHash.toString(
+            'hex',
+          )}, reason ${String(verify.reason)}`,
+        )
+        // TODO: delete transaction
         continue
       }
 
