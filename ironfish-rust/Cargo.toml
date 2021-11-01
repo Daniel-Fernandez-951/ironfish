@@ -12,7 +12,7 @@ path = "src/lib.rs"
 
 [dependencies]
 zcash_primitives = {git = "https://github.com/iron-fish/librustzcash.git", rev = "8186d84"}
-zcash_proofs = {git = "https://github.com/iron-fish/librustzcash.git", rev = "8186d84"}
+zcash_proofs = {git = "https://github.com/iron-fish/librustzcash.git", rev = "8186d84", features = ["multicore"]}
 bellman = {git = "https://github.com/iron-fish/librustzcash.git", rev = "8186d84", version = "0.6", default-features = false, features = ["groth16"]}
 pairing = { git = "https://github.com/iron-fish/librustzcash.git", rev = "8186d84", version = "0.16", features = ["expose-arith"]}
 ff = { git = "https://github.com/iron-fish/librustzcash.git", rev = "8186d84", version = "0.6"}

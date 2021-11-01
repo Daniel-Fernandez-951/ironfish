@@ -22,9 +22,9 @@ import { Block, SerializedBlock } from '../primitives/block'
 import { BlockHash, BlockHeader, isBlockHeavier, isBlockLater } from '../primitives/blockheader'
 import {
   NoteEncrypted,
+  NoteEncryptedHash,
   SerializedWasmNoteEncrypted,
   SerializedWasmNoteEncryptedHash,
-  WasmNoteEncryptedHash,
 } from '../primitives/noteEncrypted'
 import { Nullifier, NullifierHash } from '../primitives/nullifier'
 import { Target } from '../primitives/target'
@@ -66,7 +66,7 @@ export class Blockchain {
   opened = false
   notes: MerkleTree<
     NoteEncrypted,
-    WasmNoteEncryptedHash,
+    NoteEncryptedHash,
     SerializedWasmNoteEncrypted,
     SerializedWasmNoteEncryptedHash
   >

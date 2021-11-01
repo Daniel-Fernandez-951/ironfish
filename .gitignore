@@ -38,6 +38,7 @@ lerna-debug.log*
 
 # rust build artifacts
 **/*/target/*
+*.node
 
 # ironfish-cli
 bin/ironfish-cli/databases

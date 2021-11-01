@@ -4,6 +4,7 @@
     "config/eslint-config-ironfish",
     "ironfish-cli",
     "ironfish",
+    "ironfish-node-api",
     "ironfish-wasm/nodejs",
     "ironfish-wasm/web"
   ],

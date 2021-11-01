@@ -6,16 +6,16 @@ import {
   generateKey,
   generateNewPublicAddress,
   Key,
-  WasmNote,
-  WasmSimpleTransaction,
-  WasmTransaction,
-  WasmTransactionPosted,
-} from 'ironfish-wasm-nodejs'
+  Note as NativeNote,
+  SimpleTransaction as NativeSimpleTransaction,
+  Transaction as NativeTransaction,
+  TransactionPosted as NativeTransactionPosted,
+} from 'ironfish-node-api'
 import { Verifier } from './consensus'
 import { MerkleTree } from './merkletree'
 import { NoteHasher } from './merkletree/hasher'
 import { Note } from './primitives/note'
-import { NoteEncrypted, WasmNoteEncryptedHash } from './primitives/noteEncrypted'
+import { NoteEncrypted, NoteEncryptedHash } from './primitives/noteEncrypted'
 import { IDatabase } from './storage'
 import { Strategy } from './strategy'
 import { createNodeTest } from './testUtilities'
@@ -30,7 +30,7 @@ async function makeWasmStrategyTree({
   depth?: number
   name?: string
   database?: IDatabase
-} = {}): Promise<MerkleTree<NoteEncrypted, WasmNoteEncryptedHash, Buffer, Buffer>> {
+} = {}): Promise<MerkleTree<NoteEncrypted, NoteEncryptedHash, Buffer, Buffer>> {
   const openDb = !database
 
   if (!name) {
@@ -68,10 +68,10 @@ describe('Demonstrate the Sapling API', () => {
   let tree: ThenArg<ReturnType<typeof makeWasmStrategyTree>>
   let receiverKey: Key
   let spenderKey: Key
-  let minerNote: WasmNote
-  let minerTransaction: WasmTransactionPosted
-  let simpleTransaction: WasmSimpleTransaction
-  let publicTransaction: WasmTransactionPosted
+  let minerNote: NativeNote
+  let minerTransaction: NativeTransactionPosted
+  let simpleTransaction: NativeSimpleTransaction
+  let publicTransaction: NativeTransactionPosted
 
   beforeAll(async () => {
     // Pay the cost of setting up Sapling and the DB outside of any test
@@ -97,8 +97,8 @@ describe('Demonstrate the Sapling API', () => {
     it('Can create a miner reward', () => {
       const owner = generateNewPublicAddress(spenderKey.spending_key).public_address
 
-      minerNote = new WasmNote(owner, BigInt(42), '')
-      const transaction = new WasmTransaction()
+      minerNote = new NativeNote(owner, BigInt(42), '')
+      const transaction = new NativeTransaction()
       expect(transaction.receive(spenderKey.spending_key, minerNote)).toBe('')
       minerTransaction = transaction.post_miners_fee()
       expect(minerTransaction).toBeTruthy()
@@ -107,7 +107,7 @@ describe('Demonstrate the Sapling API', () => {
 
     it('Can verify the miner transaction', () => {
       const serializedTransaction = minerTransaction.serialize()
-      const deserializedTransaction = WasmTransactionPosted.deserialize(serializedTransaction)
+      const deserializedTransaction = NativeTransactionPosted.deserialize(serializedTransaction)
       expect(deserializedTransaction.verify()).toBeTruthy()
     })
 
@@ -121,7 +121,7 @@ describe('Demonstrate the Sapling API', () => {
     })
 
     it('Can create a simple transaction', () => {
-      simpleTransaction = new WasmSimpleTransaction(spenderKey.spending_key, BigInt(0))
+      simpleTransaction = new NativeSimpleTransaction(spenderKey.spending_key, BigInt(0))
       expect(simpleTransaction).toBeTruthy()
     })
 
@@ -136,7 +136,7 @@ describe('Demonstrate the Sapling API', () => {
 
     it('Can add a receive to the transaction', () => {
       receiverKey = generateKey()
-      const receivingNote = new WasmNote(receiverKey.public_address, BigInt(40), '')
+      const receivingNote = new NativeNote(receiverKey.public_address, BigInt(40), '')
       const result = simpleTransaction.receive(receivingNote)
       expect(result).toEqual('')
     })
@@ -226,7 +226,7 @@ describe('Demonstrate the Sapling API', () => {
   describe('Finding notes to spend', () => {
     let receiverNote: Note
     const receiverWitnessIndex = 1
-    let transaction: WasmTransaction
+    let transaction: NativeTransaction
 
     it('Decrypts and fails to decrypt notes', async () => {
       // Get the note we added in the previous example
@@ -251,7 +251,7 @@ describe('Demonstrate the Sapling API', () => {
     })
 
     it('Can create a transaction', async () => {
-      transaction = new WasmTransaction()
+      transaction = new NativeTransaction()
 
       const witness = await tree.witness(receiverWitnessIndex)
       if (witness === null) {
@@ -264,8 +264,8 @@ describe('Demonstrate the Sapling API', () => {
       expect(transaction.spend(receiverKey.spending_key, note, witness)).toBe('')
       receiverNote.returnReference()
 
-      const noteForSpender = new WasmNote(spenderKey.public_address, BigInt(10), '')
-      const receiverNoteToSelf = new WasmNote(
+      const noteForSpender = new NativeNote(spenderKey.public_address, BigInt(10), '')
+      const receiverNoteToSelf = new NativeNote(
         generateNewPublicAddress(receiverKey.spending_key).public_address,
         BigInt(29),
         '',

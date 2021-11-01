@@ -4,7 +4,7 @@
 
 import {
   SerializedWasmNoteEncryptedHash,
-  WasmNoteEncryptedHash,
+  NoteEncryptedHash,
 } from '../primitives/noteEncrypted'
 import { NullifierHash } from '../primitives/nullifier'
 import { Target, TargetSerdeInstance } from '../primitives/target'
@@ -81,7 +81,7 @@ type PartialBlockHeader = {
   sequence: number
   previousBlockHash: Buffer
   noteCommitment: {
-    commitment: WasmNoteEncryptedHash
+    commitment: NoteEncryptedHash
     size: number
   }
   nullifierCommitment: {

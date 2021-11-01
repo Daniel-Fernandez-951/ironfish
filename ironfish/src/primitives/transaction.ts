@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-import { WasmTransactionPosted } from 'ironfish-wasm-nodejs'
+import { TransactionPosted } from 'ironfish-node-api'
 import { VerificationResult, VerificationResultReason } from '../consensus/verifier'
 import { Serde } from '../serde'
 import { WorkerPool } from '../workerPool'
@@ -18,7 +18,7 @@ export class Transaction {
   private readonly wasmTransactionPostedSerialized: Buffer
   private readonly workerPool: WorkerPool
 
-  private wasmTransactionPosted: WasmTransactionPosted | null = null
+  private wasmTransactionPosted: TransactionPosted | null = null
   private referenceCount = 0
 
   constructor(wasmTransactionPostedSerialized: Buffer, workerPool: WorkerPool) {
@@ -33,10 +33,10 @@ export class Transaction {
   /**
    * Preallocate any resources necessary for using the transaction.
    */
-  takeReference(): WasmTransactionPosted {
+  takeReference(): TransactionPosted {
     this.referenceCount++
     if (this.wasmTransactionPosted === null) {
-      this.wasmTransactionPosted = WasmTransactionPosted.deserialize(
+      this.wasmTransactionPosted = TransactionPosted.deserialize(
         this.wasmTransactionPostedSerialized,
       )
     }
@@ -58,7 +58,7 @@ export class Transaction {
   /**
    * Wraps the given callback in takeReference and returnReference.
    */
-  withReference<R>(callback: (transaction: WasmTransactionPosted) => R): R {
+  withReference<R>(callback: (transaction: TransactionPosted) => R): R {
     const transaction = this.takeReference()
     try {
       return callback(transaction)

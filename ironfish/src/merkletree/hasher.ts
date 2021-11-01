@@ -1,12 +1,12 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-import { WasmNoteEncrypted } from 'ironfish-wasm-nodejs'
+import { NoteEncrypted as NativeNoteEncrypted } from 'ironfish-node-api'
 import {
   NoteEncrypted,
   SerializedWasmNoteEncrypted,
   SerializedWasmNoteEncryptedHash,
-  WasmNoteEncryptedHash,
+  NoteEncryptedHash,
   WasmNoteEncryptedHashSerde,
   WasmNoteEncryptedSerde,
 } from '../primitives/noteEncrypted'
@@ -45,7 +45,7 @@ export class NoteHasher
   implements
     MerkleHasher<
       NoteEncrypted,
-      WasmNoteEncryptedHash,
+      NoteEncryptedHash,
       SerializedWasmNoteEncrypted,
       SerializedWasmNoteEncryptedHash
     >
@@ -62,7 +62,7 @@ export class NoteHasher
     return this._merkleNoteSerde
   }
 
-  hashSerde(): Serde<WasmNoteEncryptedHash, SerializedWasmNoteEncryptedHash> {
+  hashSerde(): Serde<NoteEncryptedHash, SerializedWasmNoteEncryptedHash> {
     return this._merkleNoteHashSerde
   }
 
@@ -72,10 +72,10 @@ export class NoteHasher
 
   combineHash(
     depth: number,
-    left: WasmNoteEncryptedHash,
-    right: WasmNoteEncryptedHash,
-  ): WasmNoteEncryptedHash {
-    return Buffer.from(WasmNoteEncrypted.combineHash(depth, left, right))
+    left: NoteEncryptedHash,
+    right: NoteEncryptedHash,
+  ): NoteEncryptedHash {
+    return Buffer.from(NativeNoteEncrypted.combineHash(depth, left, right))
   }
 }
 
