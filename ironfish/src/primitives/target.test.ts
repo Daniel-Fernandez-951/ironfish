@@ -66,8 +66,8 @@ describe('Target', () => {
 describe('Calculate target', () => {
   it('can increase target (which decreases difficulty) if its taking too long to mine a block (20+ seconds since last block)', () => {
     const now = new Date()
-    // for any time 70-79 seconds after the last block, difficulty should decrease by previous block's difficulty / BigInt(2048)
-    for (let i = 70; i < 79; i++) {
+    // for any time 65-75 seconds after the last block, difficulty should decrease by previous block's difficulty / BigInt(2048)
+    for (let i = 65; i < 75; i++) {
       const time = new Date(now.getTime() + i * 1000)
 
       const difficulty = BigInt(231072)
@@ -84,8 +84,8 @@ describe('Calculate target', () => {
       expect(newTarget.asBigInt()).toBeGreaterThan(target.asBigInt())
     }
 
-    // for any time 80-89 seconds after the last block, difficulty should decrease by previous block's difficulty / BigInt(2048) * 2
-    for (let i = 80; i < 89; i++) {
+    // for any time 75-85 seconds after the last block, difficulty should decrease by previous block's difficulty / BigInt(2048) * 2
+    for (let i = 75; i < 85; i++) {
       const time = new Date(now.getTime() + i * 1000)
 
       const difficulty = BigInt(231072)
@@ -103,9 +103,9 @@ describe('Calculate target', () => {
     }
   })
 
-  it('can decrease target (which increases difficulty) if a block is trying to come in too early (50-59 seconds)', () => {
+  it('can decrease target (which increases difficulty) if a block is trying to come in too early (1-55 seconds)', () => {
     const now = new Date()
-    for (let i = 50; i < 59; i++) {
+    for (let i = 45; i < 55; i++) {
       const time = new Date(now.getTime() + i * 1000)
 
       const difficulty = BigInt(231072)
@@ -121,11 +121,29 @@ describe('Calculate target', () => {
 
       expect(newTarget.targetValue).toBeLessThan(target.targetValue)
     }
+
+    // for any time 35-45 seconds after the last block, difficulty should increase by previous block's difficulty / BigInt(2048) * 2
+    for (let i = 35; i < 45; i++) {
+      const time = new Date(now.getTime() + i * 1000)
+
+      const difficulty = BigInt(231072)
+      const target = Target.fromDifficulty(difficulty)
+
+      const diffInDifficulty = (difficulty / BigInt(2048)) * BigInt(2)
+
+      const newDifficulty = Target.calculateDifficulty(time, now, difficulty)
+      const newTarget = Target.calculateTarget(time, now, target)
+
+      expect(newDifficulty).toBeGreaterThan(difficulty)
+      expect(BigInt(difficulty) + diffInDifficulty).toEqual(newDifficulty)
+
+      expect(newTarget.targetValue).toBeLessThan(target.targetValue)
+    }
   })
 
-  it('keeps difficulty/target of parent block header if time differnece is between 60 and 69 seconds', () => {
+  it('keeps difficulty/target of parent block header if time differnece is between 55 and 64 seconds', () => {
     const now = new Date()
-    for (let i = 60; i < 69; i++) {
+    for (let i = 55; i < 65; i++) {
       const time = new Date(now.getTime() + i * 1000)
 
       const difficulty = BigInt(231072)
