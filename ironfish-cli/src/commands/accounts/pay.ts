@@ -199,11 +199,11 @@ ${displayIronAmountWithCurrency(
 Sending ${displayIronAmountWithCurrency(amount, true)} to ${transaction.toPublicKey} from ${
         transaction.fromAccountName
       }
-Transaction Hash: ${transaction.hash}
+Transaction Hash: ${(transaction.hash).toUpperCase()}
 Transaction fee: ${displayIronAmountWithCurrency(fee, true)}
 
 Find the transaction on https://explorer.ironfish.network/transaction/${
-        transaction.hash
+        (transaction.hash).toUpperCase()
       } (it can take a few minutes before the transaction appears in the Explorer)`)
     } catch (error: unknown) {
       stopProgressBar()
